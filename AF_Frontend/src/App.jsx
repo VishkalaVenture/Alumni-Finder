@@ -1,35 +1,43 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import RegistrationPage from "./pages/RegistrationPage";
+import LoginPage from "./pages/LoginPage";
+import ProfilePage from "./pages/ProfilePage";
+import {BrowserRouter as Router, Routes, Route} from "react-router-dom";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      {/* PAGES */}
+      {/* 
+        Registeration Page - a new user can register
+        Log In Page - registered user can login
+        Profile Page - any registered user can view any registered user's profile
+        Settings Page - Logged in user can change the profile details and preferences
+        Main Page - Page to find an Alumni
+    */}
+
+      {/* 
+        In Main Page, the logged in user can search for other Almunis using either their name or their username.
+    */}
+
+      {/*
+        If a user has not logged in, then redirect the user to the Login Page.
+        Without logging in, the user cannot view any pages except for the Registeration Page
+    */}
+
+      {/* 
+        In Settings Page, the logged in user can edit the personal details provided by him.
+        The user can toggle the visibility of the profile information that others can view.
+    */}
+
+    <Router>
+      <Routes>
+        <Route path="/register" element={<RegistrationPage />}/>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/profile_page" element={<ProfilePage/>} />
+      </Routes>
+    </Router>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
