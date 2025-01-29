@@ -1,7 +1,8 @@
 import RegistrationPage from "./pages/RegistrationPage";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
-import {BrowserRouter as Router, Routes, Route} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import SettingsPage from "./pages/SettingsPage";
 
 function App() {
   return (
@@ -29,13 +30,13 @@ function App() {
         The user can toggle the visibility of the profile information that others can view.
     */}
 
-    <Router>
-      <Routes>
-        <Route path="/register" element={<RegistrationPage />}/>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/profile_page" element={<ProfilePage/>} />
-      </Routes>
-    </Router>
+      <Router>
+        <Routes>
+          <Route path="/register" element={<RegistrationPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/:username/*" element={<ProfilePage />} />
+        </Routes>
+      </Router>
     </>
   );
 }
