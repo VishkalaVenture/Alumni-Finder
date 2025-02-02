@@ -1,9 +1,12 @@
-import React, { useState } from "react";
-import { User, Mail, Phone, MapPin, Calendar, Camera } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { User, Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from 'react-redux';
 
-const ProfileDetails = (props) => {
+const ProfileDetails = ({ username }) => {
   const navigate = useNavigate();
+  const loggedInUserId = useSelector((state) => state.user.id);
+
   // Sample user data - replace with actual user data from your backend
   const [userData, setUserData] = useState({
     fullName: "John Doe",
@@ -14,21 +17,18 @@ const ProfileDetails = (props) => {
     profileImage: null,
   });
 
-  // const [isEditing, setIsEditing] = useState(false);
-
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUserData((prev) => ({
-          ...prev,
-          profileImage: reader.result,
-        }));
-      };
-      reader.readAsDataURL(file);
+  const getUserData = async () => {
+    try {
+      const response = await axios.get(
+        `https://your-backend-url.com/api/get-user-data/${username}`,
+      );
+      setUserData(response.data);
+    } catch (err) {
+      console.error(err);
     }
-  };
+  }
+
+  useEffect(getUserData, []);
 
   const getInitials = (name) => {
     return name
@@ -37,6 +37,8 @@ const ProfileDetails = (props) => {
       .join("")
       .toUpperCase();
   };
+
+  const isOwnProfile = loggedInUserId === username;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -60,19 +62,6 @@ const ProfileDetails = (props) => {
                     {getInitials(userData.fullName)}
                   </div>
                 )}
-                {/* <label
-                  htmlFor="profile-image"
-                  className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-gray-50"
-                >
-                  <Camera className="h-5 w-5 text-gray-600" />
-                  <input
-                    type="file"
-                    id="profile-image"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                  />
-                </label> */}
               </div>
             </div>
 
@@ -167,14 +156,16 @@ const ProfileDetails = (props) => {
                 </div>
 
                 {/* Edit Profile Button */}
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => navigate(`/${props.username}/settings`)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Edit Profile
-                  </button>
-                </div>
+                {isOwnProfile && (
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => navigate(`/${username}/settings`)}
+                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Edit Profile
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
