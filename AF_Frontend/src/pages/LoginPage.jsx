@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { setId } from "../store/userSlice";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -9,6 +12,9 @@ const LoginPage = () => {
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,12 +46,33 @@ const LoginPage = () => {
     return newErrors;
   };
 
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post(
+        "https://your-backend-url.com/api/login",
+        {
+          email: formData.email,
+          password: formData.password,
+        }
+      );
+      const { id } = response.data;
+      dispatch(setId(id));
+      setEmail("");
+      setPassword("");
+      navigate("/search", {
+        replace: true,
+      });
+    } catch (err) {
+      setErrors(err.response?.data?.error || "Login failed");
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = validateForm();
 
     if (Object.keys(newErrors).length === 0) {
-      console.log("Form submitted:", formData);
+      handleLogin();
     } else {
       setErrors(newErrors);
     }
