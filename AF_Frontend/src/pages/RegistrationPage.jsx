@@ -75,13 +75,34 @@ const RegistrationPage = () => {
     
     return newErrors;
   };
+
+  const handleRegistration = async () => {
+    try {
+      const response = await axios.post(
+        "https://your-backend-url.com/api/register",
+        formData
+      );
+      const { status } = response.data;
+      if (status === "pass") {
+        alert(`Welcome! ${username}`);
+        navigate("/login", {
+          replace: true,
+        });
+      }
+      else {
+        alert("Unable to register! Try again later!");
+      }
+    } catch (err) {
+      setErrors(err.response?.data?.error || "Registration failed");
+    }
+  };
   
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = validateForm();
     
     if (Object.keys(newErrors).length === 0) {
-      console.log('Form submitted:', formData);
+      handleRegistration();
     } else {
       setErrors(newErrors);
     }

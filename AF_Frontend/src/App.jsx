@@ -2,7 +2,6 @@ import RegistrationPage from "./pages/RegistrationPage";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import SettingsPage from "./pages/SettingsPage";
 import SearchPage from "./pages/SearchPage";
 
 function App() {
