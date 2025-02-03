@@ -1,46 +1,28 @@
 import React, { useState } from "react";
 
-// Mock data for demonstration
-const mockData = [
-  { id: 1, title: "React Tutorial", description: "Learn React from scratch." },
-  {
-    id: 2,
-    title: "JavaScript Basics",
-    description: "Master the fundamentals of JavaScript.",
-  },
-  {
-    id: 3,
-    title: "Node.js Guide",
-    description: "Build scalable backend applications with Node.js.",
-  },
-  {
-    id: 4,
-    title: "CSS Styling",
-    description: "Create beautiful designs with CSS.",
-  },
-  {
-    id: 5,
-    title: "Python Programming",
-    description: "Get started with Python programming.",
-  },
-];
-
 const SearchPage = () => {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]); // Initialize with empty array
+  const [results, setResults] = useState([]);
+
+  const getQueriedData = async (q) => {
+    try {
+      const response = await axios.get(
+        `https://your-backend-url.com/api/search/${q}`
+      );
+      setResults(response.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleSearch = (e) => {
     const searchQuery = e.target.value;
     setQuery(searchQuery);
 
     if (searchQuery.trim()) {
-      // Filter mock data based on the query
-      const filteredResults = mockData.filter((item) =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setResults(filteredResults);
+      getQueriedData(searchQuery);
     } else {
-      setResults([]); // Show no results if the query is empty
+      setResults([]);
     }
   };
 
@@ -62,15 +44,26 @@ const SearchPage = () => {
         {results.length > 0 ? (
           <div className="space-y-4">
             {results.map((item) => (
-              <div key={item.id} className="bg-white p-4 rounded-lg shadow-md">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-gray-600">{item.description}</p>
+              <div
+                key={item.id}
+                className="flex items-center p-2 hover:bg-gray-100 cursor-pointer"
+              >
+                <img
+                  src={item.profileImage}
+                  alt={`${item.username}'s profile picture`}
+                  className="rounded-full h-12 w-12 object-cover mr-3"
+                  loading="lazy"
+                />
+                <div>
+                  <p className="font-semibold text-sm">{item.username}</p>
+                  <p className="text-xs text-gray-500">
+                    {item.firstName + " " + item.lastName}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
-        ) : query.trim() ? ( // Show "No results found" only if the query is not empty
+        ) : query.trim() ? (
           <p className="text-center text-gray-600">No results found.</p>
         ) : null}
       </div>
