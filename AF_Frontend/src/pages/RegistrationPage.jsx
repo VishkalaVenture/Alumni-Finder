@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   User,
   Mail,
@@ -9,9 +9,11 @@ import {
   Phone,
   Calendar,
 } from "lucide-react";
+import axios from "axios";
 
 const RegistrationPage = () => {
   const [formData, setFormData] = useState({
+    username: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -24,6 +26,7 @@ const RegistrationPage = () => {
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,6 +44,12 @@ const RegistrationPage = () => {
 
   const validateForm = () => {
     const newErrors = {};
+
+    if (!formData.username.trim()) {
+      newErrors.username = "Username is required";
+    } else if (usernameAvailable === false) {
+      newErrors.username = "Username is already taken";
+    }
 
     if (!formData.firstName.trim()) {
       newErrors.firstName = "First name is required";
@@ -89,18 +98,37 @@ const RegistrationPage = () => {
     return newErrors;
   };
 
+  useEffect(() => {
+    const checkUsernameAvailability = async () => {
+      if (formData.username.trim()) {
+        try {
+          const response = await axios.get(
+            `https://your-backend-url.com/api/check-username?username=${formData.username}`
+          );
+          setUsernameAvailable(response.data.available);
+        } catch (error) {
+          console.error("Error checking username:", error);
+          setUsernameAvailable(false);
+        }
+      } else {
+        setUsernameAvailable(null);
+      }
+    };
+
+    const timeoutId = setTimeout(checkUsernameAvailability, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.username]);
+
   const handleRegistration = async () => {
     try {
       const response = await axios.post(
         "https://your-backend-url.com/api/register",
-        {
-          ...formData,
-          fullName: `${formData.firstName} ${formData.lastName}`, // Combine for API if needed
-        }
+        formData
       );
       const { status } = response.data;
       if (status === "pass") {
-        alert(`Welcome! ${formData.firstName}`);
+        alert(`Welcome! ${formData.username}`);
         navigate("/login", {
           replace: true,
         });
@@ -146,6 +174,45 @@ const RegistrationPage = () => {
             <div className="grid grid-cols-2 gap-6">
               {/* Left Column */}
               <div className="space-y-6">
+                {/* Username Field */}
+                <div>
+                  <label
+                    htmlFor="username"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Username
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      name="username"
+                      id="username"
+                      className={`block w-full pl-10 pr-3 py-2 border ${
+                        errors.username ? "border-red-300" : "border-gray-300"
+                      } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                      value={formData.username}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  {errors.username && (
+                    <p className="mt-2 text-sm text-red-600">
+                      {errors.username}
+                    </p>
+                  )}
+                  {usernameAvailable === false && (
+                    <p className="mt-2 text-sm text-red-600">
+                      Username is taken.
+                    </p>
+                  )}
+                  {usernameAvailable === true && formData.username.trim() && (
+                    <p className="mt-2 text-sm text-green-600">
+                      Username is available.
+                    </p>
+                  )}
+                </div>
                 {/* Name Fields */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -320,7 +387,7 @@ const RegistrationPage = () => {
                   >
                     Complete Address
                   </label>
-                  <div className="mt-1 relative rounded-md shadow-sm h-32">
+                  <div className="mt-1 relative rounded-md shadow-sm h-55">
                     <div className="absolute top-3 left-3 pointer-events-none">
                       <MapPin className="h-5 w-5 text-gray-400" />
                     </div>
