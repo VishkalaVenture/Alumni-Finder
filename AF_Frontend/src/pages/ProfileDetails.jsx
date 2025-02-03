@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { User, Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 
 const ProfileDetails = ({ username }) => {
   const navigate = useNavigate();
@@ -9,7 +9,8 @@ const ProfileDetails = ({ username }) => {
 
   // Sample user data - replace with actual user data from your backend
   const [userData, setUserData] = useState({
-    fullName: "John Doe",
+    firstName: "John",
+    lastName: "Doe",
     email: "john.doe@example.com",
     address: "123 Main Street, Apt 4B, New York, NY 10001",
     mobileNumber: "1234567890",
@@ -17,18 +18,31 @@ const ProfileDetails = ({ username }) => {
     profileImage: null,
   });
 
+  const [fieldVisibility, setFieldVisibility] = useState({
+    firstName: true,
+    lastName: true,
+    email: true,
+    address: true,
+    mobileNumber: true,
+    dateOfBirth: true,
+  });
+
   const getUserData = async () => {
     try {
       const response = await axios.get(
-        `https://your-backend-url.com/api/get-user-data/${username}`,
+        `https://your-backend-url.com/api/get-user-data/${username}`
       );
-      setUserData(response.data);
+      const data = response.data;
+      setUserData(data.userData);
+      setFieldVisibility(data.fieldVisibility);
     } catch (err) {
       console.error(err);
     }
-  }
+  };
 
-  useEffect(getUserData, []);
+  useEffect(() => {
+    getUserData();
+  }, []);
 
   const getInitials = (name) => {
     return name
@@ -59,7 +73,7 @@ const ProfileDetails = ({ username }) => {
                   />
                 ) : (
                   <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-gray-200 flex items-center justify-center text-2xl font-bold text-gray-600">
-                    {getInitials(userData.fullName)}
+                    {getInitials(userData.firstName + " " + userData.lastName)}
                   </div>
                 )}
               </div>
@@ -69,7 +83,7 @@ const ProfileDetails = ({ username }) => {
             <div className="mt-6 max-w-2xl mx-auto">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900">
-                  {userData.fullName}
+                  {userData.firstName + " " + userData.lastName}
                 </h2>
                 <p className="text-sm text-gray-500">
                   Member since January 2024
@@ -85,72 +99,83 @@ const ProfileDetails = ({ username }) => {
                       Personal Information
                     </h3>
                     <div className="space-y-4">
-                      <div className="flex items-start">
-                        <User className="h-5 w-5 text-gray-400 mt-1" />
-                        <div className="ml-3">
-                          <label className="block text-sm font-medium text-gray-500">
-                            Full Name
-                          </label>
-                          <p className="mt-1 text-sm text-gray-900">
-                            {userData.fullName}
-                          </p>
+                      {(isOwnProfile ||
+                        (fieldVisibility.firstName &&
+                          fieldVisibility.lastName)) && (
+                        <div className="flex items-start">
+                          <User className="h-5 w-5 text-gray-400 mt-1" />
+                          <div className="ml-3">
+                            <label className="block text-sm font-medium text-gray-500">
+                              Full Name
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {userData.firstName + " " + userData.lastName}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      <div className="flex items-start">
-                        <Mail className="h-5 w-5 text-gray-400 mt-1" />
-                        <div className="ml-3">
-                          <label className="block text-sm font-medium text-gray-500">
-                            Email
-                          </label>
-                          <p className="mt-1 text-sm text-gray-900">
-                            {userData.email}
-                          </p>
+                      {(isOwnProfile || fieldVisibility.email) && (
+                        <div className="flex items-start">
+                          <Mail className="h-5 w-5 text-gray-400 mt-1" />
+                          <div className="ml-3">
+                            <label className="block text-sm font-medium text-gray-500">
+                              Email
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {userData.email}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      <div className="flex items-start">
-                        <Phone className="h-5 w-5 text-gray-400 mt-1" />
-                        <div className="ml-3">
-                          <label className="block text-sm font-medium text-gray-500">
-                            Mobile Number
-                          </label>
-                          <p className="mt-1 text-sm text-gray-900">
-                            {userData.mobileNumber}
-                          </p>
+                      {(isOwnProfile || fieldVisibility.mobileNumber) && (
+                        <div className="flex items-start">
+                          <Phone className="h-5 w-5 text-gray-400 mt-1" />
+                          <div className="ml-3">
+                            <label className="block text-sm font-medium text-gray-500">
+                              Mobile Number
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {userData.mobileNumber}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      <div className="flex items-start">
-                        <Calendar className="h-5 w-5 text-gray-400 mt-1" />
-                        <div className="ml-3">
-                          <label className="block text-sm font-medium text-gray-500">
-                            Date of Birth
-                          </label>
-                          <p className="mt-1 text-sm text-gray-900">
-                            {new Date(userData.dateOfBirth).toLocaleDateString(
-                              "en-US",
-                              {
+                      {(isOwnProfile || fieldVisibility.dateOfBirth) && (
+                        <div className="flex items-start">
+                          <Calendar className="h-5 w-5 text-gray-400 mt-1" />
+                          <div className="ml-3">
+                            <label className="block text-sm font-medium text-gray-500">
+                              Date of Birth
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {new Date(
+                                userData.dateOfBirth
+                              ).toLocaleDateString("en-US", {
                                 year: "numeric",
                                 month: "long",
                                 day: "numeric",
-                              }
-                            )}
-                          </p>
+                              })}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      <div className="flex items-start">
-                        <MapPin className="h-5 w-5 text-gray-400 mt-1" />
-                        <div className="ml-3">
-                          <label className="block text-sm font-medium text-gray-500">
-                            Address
-                          </label>
-                          <p className="mt-1 text-sm text-gray-900">
-                            {userData.address}
-                          </p>
+                      {(isOwnProfile || fieldVisibility.address) && (
+                        <div className="flex items-start">
+                          <MapPin className="h-5 w-5 text-gray-400 mt-1" />
+                          <div className="ml-3">
+                            <label className="block text-sm font-medium text-gray-500">
+                              Address
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {userData.address}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
