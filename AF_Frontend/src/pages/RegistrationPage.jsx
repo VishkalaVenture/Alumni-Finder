@@ -34,6 +34,9 @@ const RegistrationPage = () => {
       ...prev,
       [name]: value,
     }));
+    if (`${name}` === "username") {
+      checkUsernameAvailability();
+    }
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -98,27 +101,21 @@ const RegistrationPage = () => {
     return newErrors;
   };
 
-  useEffect(() => {
-    const checkUsernameAvailability = async () => {
-      if (formData.username.trim()) {
-        try {
-          const response = await axios.get(
-            `https://your-backend-url.com/api/check-username?username=${formData.username}`
-          );
-          setUsernameAvailable(response.data.available);
-        } catch (error) {
-          console.error("Error checking username:", error);
-          setUsernameAvailable(false);
-        }
-      } else {
-        setUsernameAvailable(null);
+  const checkUsernameAvailability = async () => {
+    if (formData.username.trim()) {
+      try {
+        const response = await axios.get(
+          `https://your-backend-url.com/api/check-username?username=${formData.username}`
+        );
+        setUsernameAvailable(response.data.available);
+      } catch (error) {
+        console.error("Error checking username:", error);
+        setUsernameAvailable(false);
       }
-    };
-
-    const timeoutId = setTimeout(checkUsernameAvailability, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [formData.username]);
+    } else {
+      setUsernameAvailable(null);
+    }
+  };
 
   const handleRegistration = async () => {
     try {

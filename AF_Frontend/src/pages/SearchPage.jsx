@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const SearchPage = () => {
   const [query, setQuery] = useState("");
@@ -55,7 +56,12 @@ const SearchPage = () => {
                   loading="lazy"
                 />
                 <div>
-                  <p className="font-semibold text-sm">{item.username}</p>
+                  <Link
+                    className="font-semibold text-sm"
+                    to={`/${item.username}`}
+                  >
+                    {item.username}
+                  </Link>
                   <p className="text-xs text-gray-500">
                     {item.firstName + " " + item.lastName}
                   </p>

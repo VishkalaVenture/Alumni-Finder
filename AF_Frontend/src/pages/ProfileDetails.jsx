@@ -9,6 +9,7 @@ const ProfileDetails = ({ username }) => {
 
   // Sample user data - replace with actual user data from your backend
   const [userData, setUserData] = useState({
+    username: "johndoe69",
     firstName: "John",
     lastName: "Doe",
     email: "john.doe@example.com",
@@ -19,6 +20,7 @@ const ProfileDetails = ({ username }) => {
   });
 
   const [fieldVisibility, setFieldVisibility] = useState({
+    username: true,
     firstName: true,
     lastName: true,
     email: true,
@@ -99,6 +101,20 @@ const ProfileDetails = ({ username }) => {
                       Personal Information
                     </h3>
                     <div className="space-y-4">
+                    {(isOwnProfile || fieldVisibility.username) && (
+                        <div className="flex items-start">
+                          <User className="h-5 w-5 text-gray-400 mt-1" />
+                          <div className="ml-3">
+                            <label className="block text-sm font-medium text-gray-500">
+                              Username
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {userData.username}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
                       {(isOwnProfile ||
                         (fieldVisibility.firstName &&
                           fieldVisibility.lastName)) && (

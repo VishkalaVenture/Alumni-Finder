@@ -4,6 +4,7 @@ import { User, Mail, Phone, MapPin, Calendar, Camera } from "lucide-react";
 const SettingsPage = () => {
   // User Data
   const [userData, setUserData] = useState({
+    username: "johndoe69",
     firstName: "John",
     lastName: "Doe",
     email: "john.doe@example.com",
@@ -15,6 +16,7 @@ const SettingsPage = () => {
 
   // User Data's Visibility
   const [fieldVisibility, setFieldVisibility] = useState({
+    username: true,
     firstName: true,
     lastName: true,
     email: true,
@@ -25,12 +27,13 @@ const SettingsPage = () => {
 
   // Errors for each field
   const [errors, setErrors] = useState({});
+  const [usernameAvailable, setUsernameAvailable] = useState(null);
 
   // Function to get the user data from server
   const getUserData = async () => {
     try {
       const response = await axios.get(
-        `https://your-backend-url.com/api/get-user-data/${username}`
+        `https://your-backend-url.com/api/get-user-data/${userData.username}`
       );
       const data = response.data;
       setUserData(data.userData);
@@ -48,6 +51,12 @@ const SettingsPage = () => {
   // Function to validate the user data
   const validateForm = () => {
     const newErrors = {};
+
+    if (!userData.username.trim()) {
+      newErrors.username = "Username is required";
+    } else if (usernameAvailable === false) {
+      newErrors.username = "Username is already taken";
+    }
 
     if (!userData.firstName.trim()) {
       newErrors.firstName = "First name is required";
@@ -86,13 +95,32 @@ const SettingsPage = () => {
     return newErrors;
   };
 
+  const checkUsernameAvailability = async () => {
+    if (userData.username.trim()) {
+      try {
+        const response = await axios.get(
+          `https://your-backend-url.com/api/check-username?username=${userData.username}`
+        );
+        setUsernameAvailable(response.data.available);
+      } catch (error) {
+        console.error("Error checking username:", error);
+        setUsernameAvailable(false);
+      }
+    } else {
+      setUsernameAvailable(null);
+    }
+  };
+
   // Function to change the data as entered
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUserData((prev) => ({
       ...prev,
       [name]: value,
-    }));
+      }));
+      if (`${name}` === "username") {
+        checkUsernameAvailability();
+      }
   };
 
   // Function to handle image upload
@@ -201,6 +229,50 @@ const SettingsPage = () => {
           </div>
 
           <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <Mail className="h-5 w-5 text-gray-400" />
+              <div className="w-full">
+                <label className="block text-sm font-medium text-gray-500 px-1 pb-1">
+                  Username
+                  <button
+                    type="button"
+                    onClick={() => handleVisibilityToggle("username")}
+                    className={`cursor-pointer ml-2 relative inline-flex items-center h-3 w-6 rounded-full transition duration-200 ease-in-out ${
+                      fieldVisibility.username ? "bg-blue-500" : "bg-gray-300"
+                    }`}
+                  >
+                    <span className="sr-only">Toggle Username Visibility</span>
+                    <span
+                      className={`absolute left-0.5 bg-white rounded-full h-2 w-2 transform transition duration-200 ease-in-out ${
+                        fieldVisibility.username ? "translate-x-3" : ""
+                      }`}
+                    ></span>
+                  </button>
+                </label>
+                <input
+                  type="text"
+                  name="username"
+                  value={userData.username}
+                  onChange={handleInputChange}
+                  className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  placeholder="Username"
+                />
+                {errors.username && (
+                  <p className="mt-2 text-sm text-red-600">{errors.username}</p>
+                )}
+                {usernameAvailable === false && (
+                  <p className="mt-2 text-sm text-red-600">
+                    Username is taken.
+                  </p>
+                )}
+                {usernameAvailable === true && userData.username.trim() && (
+                  <p className="mt-2 text-sm text-green-600">
+                    Username is available.
+                  </p>
+                )}
+              </div>
+            </div>
+
             {/* Split Name Fields */}
             <div className="flex items-center space-x-3">
               <User className="h-5 w-5 text-gray-400" />
