@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { User, Mail, Phone, MapPin, Calendar, Camera } from "lucide-react";
 
 const SettingsPage = () => {
-  // Sample user data - replace with actual user data from your backend
+  // User Data
   const [userData, setUserData] = useState({
-    fullName: "John Doe",
+    firstName: "John",
+    lastName: "Doe",
     email: "john.doe@example.com",
     address: "123 Main Street, Apt 4B, New York, NY 10001",
     mobileNumber: "1234567890",
@@ -12,6 +13,80 @@ const SettingsPage = () => {
     profileImage: null,
   });
 
+  // User Data's Visibility
+  const [fieldVisibility, setFieldVisibility] = useState({
+    firstName: true,
+    lastName: true,
+    email: true,
+    address: true,
+    mobileNumber: true,
+    dateOfBirth: true,
+  });
+
+  // Errors for each field
+  const [errors, setErrors] = useState({});
+
+  // Function to get the user data from server
+  const getUserData = async () => {
+    try {
+      const response = await axios.get(
+        `https://your-backend-url.com/api/get-user-data/${username}`
+      );
+      const data = response.data;
+      setUserData(data.userData);
+      setFieldVisibility(data.fieldVisibility);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Fetch the user data on each mount
+  // useEffect(() => {
+  //   getUserData();
+  // }, []);
+
+  // Function to validate the user data
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!userData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+
+    if (!userData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+    }
+
+    if (!userData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(userData.email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+
+    if (!userData.address.trim()) {
+      newErrors.address = "Address is required";
+    }
+
+    if (!userData.mobileNumber.trim()) {
+      newErrors.mobileNumber = "Mobile number is required";
+    } else if (!/^\d{10}$/.test(userData.mobileNumber)) {
+      newErrors.mobileNumber = "Please enter a valid 10-digit mobile number";
+    }
+
+    if (!userData.dateOfBirth) {
+      newErrors.dateOfBirth = "Date of birth is required";
+    } else {
+      const dob = new Date(userData.dateOfBirth);
+      const today = new Date();
+      if (dob >= today) {
+        newErrors.dateOfBirth = "Please enter a valid date of birth";
+      }
+    }
+
+    return newErrors;
+  };
+
+  // Function to change the data as entered
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUserData((prev) => ({
@@ -20,6 +95,7 @@ const SettingsPage = () => {
     }));
   };
 
+  // Function to handle image upload
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -34,10 +110,54 @@ const SettingsPage = () => {
     }
   };
 
+  // Function to send the saved data to server
+  const handleSaveChanges = async () => {
+    try {
+      const response = await axios.put(
+        "https://your-backend-url.com/api/save-changes",
+        { userData: userData, fieldVisibility: fieldVisibility }
+      );
+      const { status } = response.data;
+      if (status === "pass") {
+        alert("Changed saved successfully!");
+      } else {
+        alert("Unable to save! Try again later!");
+      }
+    } catch (err) {
+      setErrors(err.response?.data?.error || "Saving failed");
+    }
+  };
+
+  // Function to handle the form submission and saving updated information
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert("Details updated successfully.");
-    // updateUserData(userData);
+    const newErrors = validateForm();
+
+    if (Object.keys(newErrors).length === 0) {
+      handleSaveChanges();
+    } else {
+      setErrors(newErrors);
+    }
+  };
+
+  // Get initials for the avatar
+  const getInitials = () => {
+    var initials = "";
+    if (userData.firstName) {
+      initials += userData.firstName[0];
+    }
+    if (userData.lastName) {
+      initials += userData.lastName[0];
+    }
+    return initials.toUpperCase();
+  };
+
+  // Function to toggle the visibility
+  const handleVisibilityToggle = (fieldName) => {
+    setFieldVisibility((prevVisibility) => ({
+      ...prevVisibility,
+      [fieldName]: !prevVisibility[fieldName],
+    }));
   };
 
   return (
@@ -61,11 +181,7 @@ const SettingsPage = () => {
                 />
               ) : (
                 <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-gray-200 flex items-center justify-center text-2xl font-bold text-gray-600">
-                  {userData.fullName
-                    .split(" ")
-                    .map((word) => word[0])
-                    .join("")
-                    .toUpperCase()}
+                  {getInitials()}
                 </div>
               )}
               <label
@@ -85,20 +201,80 @@ const SettingsPage = () => {
           </div>
 
           <div className="space-y-4">
+            {/* Split Name Fields */}
             <div className="flex items-center space-x-3">
               <User className="h-5 w-5 text-gray-400" />
-              <div className="w-full">
-                <label className="block text-sm font-medium text-gray-500 px-1 pb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={userData.fullName}
-                  onChange={handleInputChange}
-                  className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  placeholder="Full Name"
-                />
+              <div className="w-full grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 px-1 pb-1 items-center">
+                    First Name
+                    <button
+                      type="button"
+                      onClick={() => handleVisibilityToggle("firstName")}
+                      className={`cursor-pointer ml-2 relative inline-flex items-center h-3 w-6 rounded-full transition duration-200 ease-in-out ${
+                        fieldVisibility.firstName
+                          ? "bg-blue-500"
+                          : "bg-gray-300"
+                      }`}
+                    >
+                      <span className="sr-only">
+                        Toggle First Name Visibility
+                      </span>
+                      <span
+                        className={`absolute left-0.5 bg-white rounded-full h-2 w-2 transform transition duration-200 ease-in-out ${
+                          fieldVisibility.firstName ? "translate-x-3" : ""
+                        }`}
+                      ></span>
+                    </button>
+                  </label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={userData.firstName}
+                    onChange={handleInputChange}
+                    className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    placeholder="First Name"
+                  />
+                  {errors.firstName && (
+                    <p className="mt-2 text-sm text-red-600">
+                      {errors.firstName}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 px-1 pb-1 items-center">
+                    Last Name
+                    <button
+                      type="button"
+                      onClick={() => handleVisibilityToggle("lastName")}
+                      className={`cursor-pointer ml-2 relative inline-flex items-center h-3 w-6 rounded-full transition duration-200 ease-in-out ${
+                        fieldVisibility.lastName ? "bg-blue-500" : "bg-gray-300"
+                      }`}
+                    >
+                      <span className="sr-only">
+                        Toggle Last Name Visibility
+                      </span>
+                      <span
+                        className={`absolute left-0.5 bg-white rounded-full h-2 w-2 transform transition duration-200 ease-in-out ${
+                          fieldVisibility.lastName ? "translate-x-3" : ""
+                        }`}
+                      ></span>
+                    </button>
+                  </label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={userData.lastName}
+                    onChange={handleInputChange}
+                    className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    placeholder="Last Name"
+                  />
+                  {errors.lastName && (
+                    <p className="mt-2 text-sm text-red-600">
+                      {errors.lastName}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -107,6 +283,20 @@ const SettingsPage = () => {
               <div className="w-full">
                 <label className="block text-sm font-medium text-gray-500 px-1 pb-1">
                   Email
+                  <button
+                    type="button"
+                    onClick={() => handleVisibilityToggle("email")}
+                    className={`cursor-pointer ml-2 relative inline-flex items-center h-3 w-6 rounded-full transition duration-200 ease-in-out ${
+                      fieldVisibility.email ? "bg-blue-500" : "bg-gray-300"
+                    }`}
+                  >
+                    <span className="sr-only">Toggle Email Visibility</span>
+                    <span
+                      className={`absolute left-0.5 bg-white rounded-full h-2 w-2 transform transition duration-200 ease-in-out ${
+                        fieldVisibility.email ? "translate-x-3" : ""
+                      }`}
+                    ></span>
+                  </button>
                 </label>
                 <input
                   type="email"
@@ -116,6 +306,9 @@ const SettingsPage = () => {
                   className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                   placeholder="Email"
                 />
+                {errors.email && (
+                  <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+                )}
               </div>
             </div>
 
@@ -124,6 +317,24 @@ const SettingsPage = () => {
               <div className="w-full">
                 <label className="block text-sm font-medium text-gray-500 px-1 pb-1">
                   Mobile Number
+                  <button
+                    type="button"
+                    onClick={() => handleVisibilityToggle("mobileNumber")}
+                    className={`cursor-pointer ml-2 relative inline-flex items-center h-3 w-6 rounded-full transition duration-200 ease-in-out ${
+                      fieldVisibility.mobileNumber
+                        ? "bg-blue-500"
+                        : "bg-gray-300"
+                    }`}
+                  >
+                    <span className="sr-only">
+                      Toggle Mobile Number Visibility
+                    </span>
+                    <span
+                      className={`absolute left-0.5 bg-white rounded-full h-2 w-2 transform transition duration-200 ease-in-out ${
+                        fieldVisibility.mobileNumber ? "translate-x-3" : ""
+                      }`}
+                    ></span>
+                  </button>
                 </label>
                 <input
                   type="text"
@@ -133,6 +344,11 @@ const SettingsPage = () => {
                   className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                   placeholder="Mobile Number"
                 />
+                {errors.mobileNumber && (
+                  <p className="mt-2 text-sm text-red-600">
+                    {errors.mobileNumber}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -141,6 +357,24 @@ const SettingsPage = () => {
               <div className="w-full">
                 <label className="block text-sm font-medium text-gray-500 px-1 pb-1">
                   Date Of Birth
+                  <button
+                    type="button"
+                    onClick={() => handleVisibilityToggle("dateOfBirth")}
+                    className={`cursor-pointer ml-2 relative inline-flex items-center h-3 w-6 rounded-full transition duration-200 ease-in-out ${
+                      fieldVisibility.dateOfBirth
+                        ? "bg-blue-500"
+                        : "bg-gray-300"
+                    }`}
+                  >
+                    <span className="sr-only">
+                      Toggle Date Of Birth Visibility
+                    </span>
+                    <span
+                      className={`absolute left-0.5 bg-white rounded-full h-2 w-2 transform transition duration-200 ease-in-out ${
+                        fieldVisibility.dateOfBirth ? "translate-x-3" : ""
+                      }`}
+                    ></span>
+                  </button>
                 </label>
                 <input
                   type="date"
@@ -149,6 +383,11 @@ const SettingsPage = () => {
                   onChange={handleInputChange}
                   className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                 />
+                {errors.dateOfBirth && (
+                  <p className="mt-2 text-sm text-red-600">
+                    {errors.dateOfBirth}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -157,15 +396,32 @@ const SettingsPage = () => {
               <div className="w-full">
                 <label className="block text-sm font-medium text-gray-500 px-1 pb-1">
                   Address
+                  <button
+                    type="button"
+                    onClick={() => handleVisibilityToggle("address")}
+                    className={`cursor-pointer ml-2 relative inline-flex items-center h-3 w-6 rounded-full transition duration-200 ease-in-out ${
+                      fieldVisibility.address ? "bg-blue-500" : "bg-gray-300"
+                    }`}
+                  >
+                    <span className="sr-only">Toggle Address Visibility</span>
+                    <span
+                      className={`absolute left-0.5 bg-white rounded-full h-2 w-2 transform transition duration-200 ease-in-out ${
+                        fieldVisibility.address ? "translate-x-3" : ""
+                      }`}
+                    ></span>
+                  </button>
                 </label>
                 <textarea
                   name="address"
                   value={userData.address}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-none"
                   placeholder="Address"
                   rows={3}
                 />
+                {errors.address && (
+                  <p className="mt-2 text-sm text-red-600">{errors.address}</p>
+                )}
               </div>
             </div>
           </div>
