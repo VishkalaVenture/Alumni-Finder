@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { User, Mail, Phone, MapPin, Calendar, Camera } from "lucide-react";
 
-const SettingsPage = () => {
-  // User Data
+const SettingsPage = ({ username }) => {
   const [userData, setUserData] = useState({
     username: "johndoe69",
     firstName: "John",
@@ -13,8 +12,6 @@ const SettingsPage = () => {
     dateOfBirth: "1990-01-01",
     profileImage: null,
   });
-
-  // User Data's Visibility
   const [fieldVisibility, setFieldVisibility] = useState({
     username: true,
     firstName: true,
@@ -24,16 +21,20 @@ const SettingsPage = () => {
     mobileNumber: true,
     dateOfBirth: true,
   });
-
-  // Errors for each field
   const [errors, setErrors] = useState({});
   const [usernameAvailable, setUsernameAvailable] = useState(null);
+  const token = useSelector((state) => state.user.token);
 
-  // Function to get the user data from server
-  const getUserData = async () => {
+  // Fetch the user data from the backend on mount
+  useEffect(async () => {
     try {
       const response = await axios.get(
-        `https://your-backend-url.com/api/get-user-data/${userData.username}`
+        `http://127.0.0.1:8000/api/get-user-data/?username=${username}`,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
       );
       const data = response.data;
       setUserData(data.userData);
@@ -41,14 +42,9 @@ const SettingsPage = () => {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
 
-  // Fetch the user data on each mount
-  // useEffect(() => {
-  //   getUserData();
-  // }, []);
-
-  // Function to validate the user data
+  // Validate the user data
   const validateForm = () => {
     const newErrors = {};
 
@@ -95,11 +91,17 @@ const SettingsPage = () => {
     return newErrors;
   };
 
+  // Check the availability of username
   const checkUsernameAvailability = async () => {
     if (userData.username.trim()) {
       try {
         const response = await axios.get(
-          `https://your-backend-url.com/api/check-username?username=${userData.username}`
+          `http://127.0.0.1:8000/api/check-username/?username=${userData.username}`,
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          }
         );
         setUsernameAvailable(response.data.available);
       } catch (error) {
@@ -111,19 +113,19 @@ const SettingsPage = () => {
     }
   };
 
-  // Function to change the data as entered
+  // Handle the user input
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUserData((prev) => ({
       ...prev,
       [name]: value,
-      }));
-      if (`${name}` === "username") {
-        checkUsernameAvailability();
-      }
+    }));
+    if (`${name}` === "username") {
+      checkUsernameAvailability();
+    }
   };
 
-  // Function to handle image upload
+  // Handle the image upload
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -138,11 +140,11 @@ const SettingsPage = () => {
     }
   };
 
-  // Function to send the saved data to server
+  // Handle the saving of any changes made to the user details
   const handleSaveChanges = async () => {
     try {
       const response = await axios.put(
-        "https://your-backend-url.com/api/save-changes",
+        "http://127.0.0.1:8000/api/save-changes/",
         { userData: userData, fieldVisibility: fieldVisibility }
       );
       const { status } = response.data;
@@ -156,7 +158,7 @@ const SettingsPage = () => {
     }
   };
 
-  // Function to handle the form submission and saving updated information
+  // Handle the form submission and saving updated information
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = validateForm();
@@ -168,7 +170,7 @@ const SettingsPage = () => {
     }
   };
 
-  // Get initials for the avatar
+  // Get initials if profile photo is unavailable
   const getInitials = () => {
     var initials = "";
     if (userData.firstName) {
@@ -180,7 +182,7 @@ const SettingsPage = () => {
     return initials.toUpperCase();
   };
 
-  // Function to toggle the visibility
+  // Handle the toggle of field visiblity
   const handleVisibilityToggle = (fieldName) => {
     setFieldVisibility((prevVisibility) => ({
       ...prevVisibility,

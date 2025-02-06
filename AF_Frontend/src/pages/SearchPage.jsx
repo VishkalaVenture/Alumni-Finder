@@ -1,14 +1,22 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 const SearchPage = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
+  const token = useSelector((state) => state.user.token);
 
-  const getQueriedData = async (q) => {
+  // Handle sending query to backend and getting the results
+  const getQueriedData = async (query) => {
     try {
       const response = await axios.get(
-        `https://your-backend-url.com/api/search/${q}`
+        `http://127.0.0.1:8000/api/search/?query=${query}`,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
       );
       setResults(response.data);
     } catch (err) {
@@ -16,6 +24,7 @@ const SearchPage = () => {
     }
   };
 
+  // Handle the query input and searching of results
   const handleSearch = (e) => {
     const searchQuery = e.target.value;
     setQuery(searchQuery);

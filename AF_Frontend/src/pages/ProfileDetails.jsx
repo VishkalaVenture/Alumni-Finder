@@ -6,8 +6,7 @@ import { useSelector } from "react-redux";
 const ProfileDetails = ({ username }) => {
   const navigate = useNavigate();
   const loggedInUserId = useSelector((state) => state.user.id);
-
-  // Sample user data - replace with actual user data from your backend
+  const token = useSelector((state) => state.user.token);
   const [userData, setUserData] = useState({
     username: "johndoe69",
     firstName: "John",
@@ -18,7 +17,6 @@ const ProfileDetails = ({ username }) => {
     dateOfBirth: "1990-01-01",
     profileImage: null,
   });
-
   const [fieldVisibility, setFieldVisibility] = useState({
     username: true,
     firstName: true,
@@ -28,11 +26,18 @@ const ProfileDetails = ({ username }) => {
     mobileNumber: true,
     dateOfBirth: true,
   });
+  const isOwnProfile = loggedInUserId === username;
 
-  const getUserData = async () => {
+  // Fetch the user data from the backend on mount
+  useEffect(async () => {
     try {
       const response = await axios.get(
-        `https://your-backend-url.com/api/get-user-data/${username}`
+        `http://127.0.0.1:8000/api/get-user-data/?username=${username}`,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
       );
       const data = response.data;
       setUserData(data.userData);
@@ -40,12 +45,9 @@ const ProfileDetails = ({ username }) => {
     } catch (err) {
       console.error(err);
     }
-  };
-
-  useEffect(() => {
-    getUserData();
   }, []);
 
+  // Get the initials if profile photo unavailable
   const getInitials = (name) => {
     return name
       .split(" ")
@@ -53,8 +55,6 @@ const ProfileDetails = ({ username }) => {
       .join("")
       .toUpperCase();
   };
-
-  const isOwnProfile = loggedInUserId === username;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -101,7 +101,7 @@ const ProfileDetails = ({ username }) => {
                       Personal Information
                     </h3>
                     <div className="space-y-4">
-                    {(isOwnProfile || fieldVisibility.username) && (
+                      {(isOwnProfile || fieldVisibility.username) && (
                         <div className="flex items-start">
                           <User className="h-5 w-5 text-gray-400 mt-1" />
                           <div className="ml-3">

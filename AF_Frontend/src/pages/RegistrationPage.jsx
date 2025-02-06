@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   User,
   Mail,
@@ -23,11 +23,28 @@ const RegistrationPage = () => {
     mobileNumber: "",
     dateOfBirth: "",
   });
-
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState(null);
 
+  // Check availability of username
+  const checkUsernameAvailability = async (username) => {
+    if (formData.username.trim()) {
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/check-username/?username=${username}`
+        );
+        setUsernameAvailable(response.data.available);
+      } catch (error) {
+        console.error("Error checking username:", error);
+        setUsernameAvailable(false);
+      }
+    } else {
+      setUsernameAvailable(null);
+    }
+  };
+
+  // Handle user input
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -35,16 +52,46 @@ const RegistrationPage = () => {
       [name]: value,
     }));
     if (`${name}` === "username") {
-      checkUsernameAvailability();
-    }
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
+      checkUsernameAvailability(value);
     }
   };
 
+  // Handle submission of data to backend and response from backend
+  const handleRegistration = async () => {
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/api/register/",
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+        {
+          username: formData.username,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          address: formData.address,
+          mobile_number: formData.mobileNumber,
+          date_of_birth: formData.dateOfBirth,
+        }
+      );
+      const { status } = response.data;
+      if (status === "pass") {
+        alert(`Welcome! ${formData.username}`);
+        navigate("/login", {
+          replace: true,
+        });
+      } else {
+        alert("Unable to register! Try again later!");
+      }
+    } catch (err) {
+      setErrors(err.response?.data?.error || "Registration failed");
+    }
+  };
+
+  // Form data validation and error catching
   const validateForm = () => {
     const newErrors = {};
 
@@ -101,42 +148,7 @@ const RegistrationPage = () => {
     return newErrors;
   };
 
-  const checkUsernameAvailability = async () => {
-    if (formData.username.trim()) {
-      try {
-        const response = await axios.get(
-          `https://your-backend-url.com/api/check-username?username=${formData.username}`
-        );
-        setUsernameAvailable(response.data.available);
-      } catch (error) {
-        console.error("Error checking username:", error);
-        setUsernameAvailable(false);
-      }
-    } else {
-      setUsernameAvailable(null);
-    }
-  };
-
-  const handleRegistration = async () => {
-    try {
-      const response = await axios.post(
-        "https://your-backend-url.com/api/register",
-        formData
-      );
-      const { status } = response.data;
-      if (status === "pass") {
-        alert(`Welcome! ${formData.username}`);
-        navigate("/login", {
-          replace: true,
-        });
-      } else {
-        alert("Unable to register! Try again later!");
-      }
-    } catch (err) {
-      setErrors(err.response?.data?.error || "Registration failed");
-    }
-  };
-
+  // Handle the submission of validated form data
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = validateForm();
