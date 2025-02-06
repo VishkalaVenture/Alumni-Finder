@@ -1,21 +1,21 @@
 import React, { useState } from "react";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Lock, Eye, EyeOff, User } from "lucide-react";
 import { useDispatch } from "react-redux";
-import { setId } from "../store/userSlice";
+import { setId, setToken } from "../store/userSlice";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
-  const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
 
+  // Handle user input
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -30,43 +30,41 @@ const LoginPage = () => {
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    }
-
-    return newErrors;
-  };
-
+  // Handle submission of user credentials to the server and receiving the response
   const handleLogin = async () => {
     try {
       const response = await axios.post(
-        "https://your-backend-url.com/api/login",
-        {
-          email: formData.email,
-          password: formData.password,
-        }
+        "http://127.0.0.1:8000/api/login/",
+        formData
       );
-      const { id } = response.data;
+      const { id, token } = response.data;
       dispatch(setId(id));
-      setEmail("");
-      setPassword("");
+      dispatch(setToken(token));
+      setFormData({
+        username: "",
+        password: "",
+      });
       navigate("/search", {
         replace: true,
       });
     } catch (err) {
-      setErrors(err.response?.data?.error || "Login failed");
+      alert(err.response?.data?.error || "Login failed");
     }
   };
 
+  // Form data validation and error catching
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.username.trim()) {
+      newErrors.username = "Username is required";
+    }
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    }
+    return newErrors;
+  };
+
+  // Handle validation and submission of form data
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = validateForm();
@@ -98,31 +96,31 @@ const LoginPage = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Email Field */}
+            {/* Username Field */}
             <div>
               <label
-                htmlFor="email"
+                htmlFor="username"
                 className="block text-sm font-medium text-gray-700"
               >
-                Email address
+                Username
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  type="email"
-                  name="email"
-                  id="email"
+                  type="username"
+                  name="username"
+                  id="username"
                   className={`block w-full pl-10 pr-3 py-2 border ${
-                    errors.email ? "border-red-300" : "border-gray-300"
+                    errors.username ? "border-red-300" : "border-gray-300"
                   } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
-                  value={formData.email}
+                  value={formData.username}
                   onChange={handleChange}
                 />
               </div>
-              {errors.email && (
-                <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+              {errors.username && (
+                <p className="mt-2 text-sm text-red-600">{errors.username}</p>
               )}
             </div>
 
